@@ -3,4 +3,4 @@
 version|function
 ---|:---:
 v1.0|calculate AQI(air quality index)
-v2.0|read local file-json
+v2.0|read local file-json format
