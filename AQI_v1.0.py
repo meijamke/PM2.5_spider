@@ -4,7 +4,7 @@
     版本：1.0
     日期：2019.3.18
     1.实现每种污染物对应的IAQI
-        1个输入参数，即Cp
+        1个输入参数，即cp
     2.实现线性缩放函数
         5个输入参数
 """
@@ -22,6 +22,7 @@ def cal_pm_iaqi(pm_val):
     """
         计算pm2.5的IAQI
     """
+    iaqi = 0
     if 0 <= pm_val < 36:
         iaqi = cal_linear(0, 50, 0, 35, pm_val)
     elif 36 <= pm_val < 76:
@@ -43,6 +44,7 @@ def cal_co_iaqi(co_val):
     """
         计算CO的IAQI，24小时的CO浓度
     """
+    iaqi = 0
     if 0 <= co_val < 3:
         iaqi = cal_linear(0, 50, 0, 2, co_val)
     elif 3 <= co_val < 5:
