@@ -6,3 +6,4 @@ v1.0|calculate AQI(air quality index)
 v2.0|read local .json file
 v3.0|read local .json file and save as .csv file
 v4.0|judge file format(json or csv), then read file
+v5.0|get http://pm25.in/city_pinyin data awkwardly
