@@ -3,12 +3,31 @@
     功能：获取空气质量指数AQI
     日期：2019.7.20
 
+    学到的点（踩过的坑）：
+    1.程序运行的时间：
+        程序执行时间=cpu时间 + io时间 + 休眠或者等待时间
+        import datetime，datetime.datetime.now()和import time，time.time()测的时间包含了其他程序使用CPU的时间（程序执行时间）
+        import time，time.clock()测的是该程序使用CPU的时间（程序运行时间）
+        https://blog.csdn.net/wangshuang1631/article/details/54286551
+
+        from timeit import timeit，timtit()经常用来测某个语句多次执行的时间（取平均，去误差）
+        from timeit import repeat，repeat()通过重复测，取最小时间作为运行时间
+        https://www.cnblogs.com/PrettyTom/p/6657984.html
+    2.网页访问过于频繁：
+    暂时解决办法：
+        1.设置requests的timeout
+        2.访问一个网页，休眠0.1秒
+
 """
 import requests
 from bs4 import BeautifulSoup
 import pandas
 import matplotlib.pyplot as plt
+import time
+# from timeit import repeat
+# from timeit import timeit
 
+print('...模块加载完毕')
 # 解决中文和负数显示问题
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
@@ -129,9 +148,11 @@ def get_url(city=''):
     for i in city_name:
         url_li.append('http://www.pm25.com/city/' + i + '.html')
     if city == '':
+        print('...网页URL获取完毕')
         return url_li
     else:
         if city in city_name:
+            print('...网页URL获取完毕')
             return 'http://www.pm25.com/city/' + city + '.html'
 
 
@@ -139,12 +160,12 @@ def get_info(url='http://www.pm25.com/city/guangzhou.html'):
     """
         获取一个城市的信息：名字、AQI和pm2.5
     """
-    r = requests.get(url)
+    r = requests.get(url, timeout=5000)
     soup = BeautifulSoup(r.text, 'lxml')
     city_name = soup.find('span', class_='city_name').text
-    aqi = soup.find('a', class_='cbol_aqi_num').text
-    pm25 = soup.find('span', class_='cbol_nongdu_num_1').text + soup.find('span', class_='cbol_nongdu_num_2').text
-    dic = {'城市': city_name, 'aqi': aqi, 'pm2.5': pm25}
+    aqi = int(soup.find('a', class_='cbol_aqi_num').text)
+    pm25 = int(soup.find('span', class_='cbol_nongdu_num_1').text)
+    dic = {'城市': city_name, 'aqi': aqi, 'pm2.5(ug/m^3)': pm25}
     return dic
 
 
@@ -152,20 +173,28 @@ def main():
     """
         主函数
     """
+
+    start = time.clock()
     url_li = get_url()
     inf = []
     for i in url_li:
         inf.append(get_info(i))
-
+        time.sleep(0.1)
+    end = time.clock()
+    print('...数据采集完毕，所用时间为{}'.format(end-start))
     df = pandas.DataFrame(inf)
-    df.set_index('城市')
     # 数据清洗
     df = df[df['aqi'] > 0]
+    print(df.sort_values(by='aqi', ascending=True))
     top50_city = df.sort_values(by='aqi', ascending=True).head(50)
-    top50_city.plot(figsize=(20, 10), kind='bar', title='空气质量指数最好的前50个城市', x='城市', y='aqi')
+    top50_city.plot(figsize=(20, 10), kind='barh', title='空气质量指数最好的前50个城市', x='城市', y='aqi')
     plt.savefig('top50_city.png')
     plt.show()
 
 
 if __name__ == '__main__':
     main()
+    # 由于电脑永远有其他程序占用资源，所以这个程序基本不可能高效运行，为了尽量排除偶然因素，用repeat更好
+    # t = repeat('main()', 'from __main__  import main', number=1, repeat=5)
+    # timeit经常用于测试一行语句的运行时间，默认执行1000,000次
+    # t = timeit('[0 for _ in range(10)]', number=1)
